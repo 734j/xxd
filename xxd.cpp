@@ -17,36 +17,7 @@
 
 char *g_argv = nullptr;
 
-void attempt_1_dumb_hex_output(const char *path) {
-
-	FILE *file = std::fopen(path, "rb");
-	int a[1];
-	while(std::fread(a, 1, 1, file)) {
-		std::cout << std::setw(2) << std::setfill('0') << std::hex << a[0];
-	}
-}
-
-std::string byte2hex(const uint8_t byte) {
-
-	const char* hexDigits = "0123456789ABCDEF";
-    std::string hexStr(2, '0'); // Create a string of size 2 initialized with '0'
-    hexStr[0] = hexDigits[(byte >> 4) & 0x0F]; // Get the first hex digit
-    hexStr[1] = hexDigits[byte & 0x0F];        // Get the second hex digit
-    return hexStr;
-}
-
-std::string byte2hex_2group(const uint8_t bytegroup[2]) {
-
-	const char* hexDigits = "0123456789ABCDEF";
-    std::string hexStr(4, '0'); // Create a string of size 2 initialized with '0'
-	hexStr[0] = hexDigits[(bytegroup[0] >> 4) & 0x0F];
-	hexStr[1] = hexDigits[bytegroup[0] & 0x0F];
-	hexStr[2] = hexDigits[(bytegroup[1] >> 4) & 0x0F];
-	hexStr[3] = hexDigits[bytegroup[1] & 0x0F];
-	return hexStr;
-}
-
-std::string byte2hex_octets_per_line(std::ifstream &bytestream, int octets) {
+std::string byte2hex_octets_per_line(std::ifstream &bytestream, int octets, std::string &offset) {
 
 	if(octets > 256 || octets < 1) {
 		return "";
@@ -55,9 +26,13 @@ std::string byte2hex_octets_per_line(std::ifstream &bytestream, int octets) {
 	const char* hex_characters = "0123456789abcdef";
 	std::string format;
 	std::string octetstr(2, '0');
-	uint8_t byte;
+	char byte;
+	auto off = bytestream.tellg();
+	std::stringstream offset_stream;
+    offset_stream << std::hex << std::setw(8) << std::setfill('0') << off;
+    offset = offset_stream.str();
 	for(int i = 0 ; i < octets ; ++i) {
-		if(bytestream.read(reinterpret_cast<char*>(&byte), sizeof(byte))) {
+		if(bytestream.read(&byte, 1)) {
 			octetstr[0] = hex_characters[(byte >> 4) & 0x0F];
 			octetstr[1] = hex_characters[byte & 0x0F];
 			format += octetstr;		
@@ -77,10 +52,11 @@ int main (int argc, char **argv) {
     }
 
 	std::ifstream file(argv[1], std::ios::binary);
-
+	std::string offset;
+	std::string format;
 	while(!file.eof()) {
-		std::string format = byte2hex_octets_per_line(file, 16);
-		std::cout << format << std::endl;
+		format = byte2hex_octets_per_line(file, 16, offset);
+		std::cout << offset << ": " << format << "\n";
 	}
 	/*
 	int opt = 0;
