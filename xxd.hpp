@@ -5,6 +5,14 @@
 #ifndef XXD_HPP
 #define XXD_HPP
 #include <string>
+class hex_octet {
+public:
+	hex_octet(char a, char b);
+	char (&get_data())[3] { return octet; }
+private:
+	char octet[3] = {'\0'};
+};
+
 class hexadecimal_line {
 public:
 	hexadecimal_line() = default;

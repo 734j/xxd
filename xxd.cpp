@@ -22,17 +22,21 @@ const char *hex_characters = nullptr;
 const char *g_lower_hex_characters = "0123456789abcdef";
 const char *g_upper_hex_characters = "0123456789ABCDEF";
 
-std::string offsetformat(long offset) {
+void byte2hex(char octet[3], char byte) {
 
-	char off_string[9] = {'0','0','0','0','0','0','0','0','\0'};
+	octet[0] = hex_characters[(byte >> 4) & 0x0F];
+	octet[1] = hex_characters[byte & 0x0F];
+}
+
+void offsetformat(char off_string[9], long offset) {
+
+    memset(off_string, '\0', 9);
 	long rem = 0;
 	for(int i = 7 ; i >= 0 ; --i) {
 		rem = offset % 16;
 		offset = offset / 16;
 		off_string[i] = hex_characters[rem];
-	}
-	
-	return std::string(off_string);
+	}	
 }
 
 hexadecimal_line byte2hex_octets_per_line(std::ifstream &bytestream, int octets) {
@@ -42,15 +46,15 @@ hexadecimal_line byte2hex_octets_per_line(std::ifstream &bytestream, int octets)
 	}
 	
 	std::string format;
-	std::string octetstr(2, '0');
+	char octetstr[3];
 	char byte;
-	auto off = bytestream.tellg();
-	std::string offset = offsetformat(off);
+	long off = bytestream.tellg();
+	char offset[9];
+	offsetformat(offset, off);
 	for(int i = 0 ; i < octets ; ++i) {
 		if(bytestream.read(&byte, 1)) {
-			octetstr[0] = hex_characters[(byte >> 4) & 0x0F];
-			octetstr[1] = hex_characters[byte & 0x0F];
-			format += octetstr;		
+			byte2hex(octetstr, byte);
+			format += octetstr;
 		} else {
 			break;
 		}
@@ -59,35 +63,38 @@ hexadecimal_line byte2hex_octets_per_line(std::ifstream &bytestream, int octets)
 	return hexadecimal_line(format, offset);
 }
 
-hexadecimal_line byte2hex_octets_per_line_stdc(FILE *bytestream, int octets) {
+std::vector<hexadecimal_line> &byte2hex_octets_per_line(std::vector<hexadecimal_line> &lines,
+														std::ifstream &bytestream,
+														int octets) {
 
-	if(octets > 255 || octets < 1) {
-		return hexadecimal_line("","");
-	}
-
-	char off_string[9] = {'0','0','0','0','0','0','0','0','\0'};
-	auto offset = std::ftell(bytestream);
-	long rem = 0;
-	for(int i = 7 ; i >= 0 ; --i) {
-		rem = offset % 16;
-		offset = offset / 16;
-		off_string[i] = hex_characters[rem];
-	}
-
-	char byte;
-	std::string octetstr(2,'0');
-	std::string format;
-	for(int i = 0 ; i < octets ; ++i) {
-		if(fread(&byte, 1, 1, bytestream)) {
-			octetstr[0] = hex_characters[(byte >> 4) & 0x0F];
-			octetstr[1] = hex_characters[byte & 0x0F];
-			format += octetstr;
-		} else {
-			break;
-		}
+	if(octets > 256 || octets < 1) {
+		return lines;
 	}
 	
-	return hexadecimal_line(format,std::string(off_string));
+	std::string format;
+	std::string octetstr(2, '0');
+	std::vector<char> buffer_bytes(4096);
+	long off = bytestream.tellg();
+	char offset[9];
+	if(!bytestream.read(&buffer_bytes[0], 4096)) {
+		
+	}
+	
+	for(auto &bb : buffer_bytes) {
+		long tmpoff = off;
+		for(int i = 0 ; i < octets ; ++i) {
+			++tmpoff;
+			octetstr[0] = hex_characters[(bb >> 4) & 0x0F];
+			octetstr[1] = hex_characters[bb & 0x0F];
+			format += octetstr;			
+		}
+		
+		offsetformat(offset, off);
+		lines.push_back(hexadecimal_line(format, offset));
+		off = tmpoff;
+	}
+	
+	return lines;
 }
 
 int main (int argc, char **argv) {
@@ -98,14 +105,14 @@ int main (int argc, char **argv) {
     }
 
 	hex_characters = g_lower_hex_characters;
-	
 	std::ifstream file(argv[1], std::ios::binary);
-	//FILE *file = fopen(argv[1], "rb");
+	std::vector<hexadecimal_line> formats;
 	hexadecimal_line format;
-	while(!file.eof()) {
-		format = byte2hex_octets_per_line(file, 16);	   
-		std::cout << format.rget_off() << ": " << format.rget_hex() << "\n";		
+	while(!file.eof()) {		
+		format = byte2hex_octets_per_line(file, 16);
+		std::cout << format.rget_off() << ": " << format.rget_hex() << "\n";
 	}
+
 	/*
 	int opt = 0;
 	while((opt = getopt(argc, argv, "acEeg:hl:o:prs:uv")) != -1) {
