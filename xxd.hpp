@@ -5,12 +5,23 @@
 #ifndef XXD_HPP
 #define XXD_HPP
 #include <string>
+
 class hex_octet {
 public:
-	hex_octet(char a, char b);
-	char (&get_data())[3] { return octet; }
+	using hexo = char[3];
+	hex_octet(char a, char b) {
+		octet[0] = a;
+		octet[1] = b;
+	}
+
+	hex_octet(hexo a) {
+		octet[0] = a[0];
+		octet[1] = a[1];
+	}
+	
+	hexo &get_data() { return octet; }
 private:
-	char octet[3] = {'\0'};
+	hexo octet = {'\0'};
 };
 
 class hexadecimal_line {
