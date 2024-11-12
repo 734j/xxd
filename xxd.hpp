@@ -19,7 +19,7 @@ public:
 		octet[1] = a[1];
 	}
 	
-	hexo &get_data() { return octet; }
+	const hexo &get_data() const { return octet; }
 private:
 	hexo octet = {'\0'};
 };
