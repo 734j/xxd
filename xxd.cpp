@@ -84,8 +84,10 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size
 		auto itld = line_data.cbegin();
 		out << offsetformat(offset) << ": ";
 		for(int i = 0 ; i < cols ; ++i) {
-			for(int j = 0 ; j < grpsize ; ++j, ++itld, ++offset) {
-				out << itld->get_data();
+			for(int j = 0 ; j < grpsize ; ++j, ++itld, ++offset) {				
+				if(itld != line_data.cend()) {
+					out << itld->get_data();
+				}
 			}
 
 			out << " ";
@@ -93,6 +95,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size
 
 		out << "\n";
 		if(bytestream.eof() && (it == big_hex_buffer.cend())) {
+			std::cerr << "EOF" << std::endl;
 			break;
 		}
 	}
