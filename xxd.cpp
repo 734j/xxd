@@ -58,41 +58,43 @@ std::vector<hex_octet> byte_buffer_2_hex(std::ifstream &bytestream, size_t bufsi
 	return ho;
 }
 
-std::ostream &final_formatted_hex_output(std::ostream &out,
-										 std::vector<hex_octet> &toformat,
-										 int &ri, int &rj,
-										 int cols, int grpsize, long &offset) {
+std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size_t bufsize, int cols, int grpsize) {
 
-	// Redesign this whole function, this all sucks
-	auto iter = toformat.cbegin(); // beginning of unformatted hex
-	bool mid = false;
-	for(;;) {
-	    		
-		std::string line; // create line string
-		out << offsetformat(offset) << ": "; // print offset, formatted
-		for(int i = ri ; i != cols ; ++i) {
-			for(int j = rj ; j != grpsize ; ++j, ++iter, ++offset) {
-				if(iter != toformat.cend()) {
-					line += iter->hex_octet::get_data();
-				}
-
-				if(iter == toformat.cend() && (rj != grpsize || ri != cols)) {
-					rj = j;
-					ri = i;
-					mid = true;
-					break;
-				} else if (iter == toformat.cend() && (rj == grpsize || ri == cols)) {
-					ri = 0;
-					rj = 0;
-					break;
-				}
-			}
-
-			if(mid) { break; }
-			line += ' ';
+	long offset = 0;
+	std::vector<hex_octet> big_hex_buffer;
+	big_hex_buffer.reserve(bufsize * 2);
+	auto it = big_hex_buffer.cbegin();
+	while(true) {
+		if(it == big_hex_buffer.cend()) {
+			big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
+			it = big_hex_buffer.cbegin();
 		}
 
-		out << line << "\n";
+		std::vector<hex_octet> line_data;
+		for(int i = 0 ; i != cols*grpsize ; ++i, ++it) {
+			if(it != big_hex_buffer.cend()) {
+				line_data.push_back(*it);
+			} else if (it == big_hex_buffer.cend()) {
+				big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
+				it = big_hex_buffer.cbegin();
+				continue;
+			}
+		}
+
+		auto itld = line_data.cbegin();
+		out << offsetformat(offset) << ": ";
+		for(int i = 0 ; i < cols ; ++i) {
+			for(int j = 0 ; j < grpsize ; ++j, ++itld, ++offset) {
+				out << itld->get_data();
+			}
+
+			out << " ";
+		}
+
+		out << "\n";
+		if(bytestream.eof() && (it == big_hex_buffer.cend())) {
+			break;
+		}
 	}
 	
 	return out;
@@ -106,13 +108,9 @@ int main (int argc, char **argv) {
     }
 
 	hex_characters = g_lower_hex_characters;
-	std::ifstream file(argv[1], std::ios::binary);
-	int ri = 0;
-	int rj = 0;
-	while(!file.eof()) {		
-		auto format = byte_buffer_2_hex(file, 4096);		
-		long off = 0;
-		final_formatted_hex_output(std::cout, format, ri, rj, 8, 2, off);
+	std::ifstream file_stream(argv[1], std::ios::binary);
+	while(!file_stream.eof()) {
+		line_buffer_out(std::cout, file_stream, 4096, 8, 2);
 	}
 
 	/*
