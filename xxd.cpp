@@ -60,12 +60,17 @@ std::vector<hex_octet> byte_buffer_2_hex(std::ifstream &bytestream, size_t bufsi
 
 std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size_t bufsize, int cols, int grpsize) {
 
+	if(cols > 256 || cols < 1) {
+		bytestream.setstate(std::ios::failbit);
+		return out;
+	}
+	
 	long offset = 0;
 	std::vector<hex_octet> big_hex_buffer;
 	big_hex_buffer.reserve(bufsize * 2);
 	auto it = big_hex_buffer.cbegin();
 	while(true) {
-		if(it == big_hex_buffer.cend()) {
+		if(it == big_hex_buffer.cend() && !bytestream.eof()) {
 			big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
 			it = big_hex_buffer.cbegin();
 		}
@@ -74,19 +79,21 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size
 		for(int i = 0 ; i != cols*grpsize ; ++i, ++it) {
 			if(it != big_hex_buffer.cend()) {
 				line_data.push_back(*it);
-			} else if (it == big_hex_buffer.cend()) {
+			} else if (it == big_hex_buffer.cend() && !bytestream.eof()) {
 				big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
 				it = big_hex_buffer.cbegin();
-				continue;
+			} else if (it == big_hex_buffer.cend() && bytestream.eof()) {
+				break;
 			}
 		}
 
 		auto itld = line_data.cbegin();
 		out << offsetformat(offset) << ": ";
 		for(int i = 0 ; i < cols ; ++i) {
-			for(int j = 0 ; j < grpsize ; ++j, ++itld, ++offset) {				
-				if(itld != line_data.cend()) {
+			for(int j = 0 ; j < grpsize ; ++j, ++offset) {
+				if(itld != line_data.cend()) {					 
 					out << itld->get_data();
+					++itld;
 				}
 			}
 
@@ -95,7 +102,6 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size
 
 		out << "\n";
 		if(bytestream.eof() && (it == big_hex_buffer.cend())) {
-			std::cerr << "EOF" << std::endl;
 			break;
 		}
 	}
@@ -112,7 +118,7 @@ int main (int argc, char **argv) {
 
 	hex_characters = g_lower_hex_characters;
 	std::ifstream file_stream(argv[1], std::ios::binary);
-	while(!file_stream.eof()) {
+	while(!file_stream.eof() && !file_stream.fail()) {
 		line_buffer_out(std::cout, file_stream, 4096, 8, 2);
 	}
 

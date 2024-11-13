@@ -3,3 +3,6 @@ xxd-TESTING
 TODO
 rockyou.txt
 testdir/
+line_buffer_out_testcases.txt
+output-nobufcheck
+output-regular
