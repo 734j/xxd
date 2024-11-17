@@ -114,31 +114,116 @@ int main (int argc, char **argv) {
 	g_argv = argv[0];
 	if (argc == 1) {
         return EXIT_FAILURE;
-    }
+    }	
 
-	hex_characters = g_lower_hex_characters;
-	std::ifstream file_stream(argv[1], std::ios::binary);
-	while(!file_stream.eof() && !file_stream.fail()) {
-		line_buffer_out(std::cout, file_stream, 4096, 8, 2);
-	}
-
-	/*
+	bool a_used = false;
+	bool c_used = false;
+	bool E_used = false;
+	bool e_used = false;
+	bool g_used = false;
+	bool h_used = false;
+	bool l_used = false;
+	bool o_used = false;
+	bool p_used = false;
+	bool r_used = false;
+	bool s_used = false;
+	bool u_used = false;
+	bool v_used = false;
 	int opt = 0;
 	while((opt = getopt(argc, argv, "acEeg:hl:o:prs:uv")) != -1) {
-
 		switch(opt) {
+		case 'a':
+
+			a_used = true;
+			
+			break;
+		case 'c':
+
+			c_used = true;
+			
+			break;
+		case 'E':
+
+			E_used = true;
+			
+			break;
+		case 'e':
+
+			e_used = true;
+			
+			break;
+		case 'g':
+
+			g_used = true;
+			
+			break;
+		case 'h':
+
+			h_used = true;
+			
+			break;
+		case 'l':
+
+			l_used = true;
+			
+			break;
+		case 'o':
+
+			o_used = true;
+			
+			break;
+		case 'p':
+
+			p_used = true;
+			
+			break;
+		case 'r':
+
+			r_used = true;
+			
+			break;
+		case 's':
+
+			s_used = true;
+			
+			break;
+		case 'u':
+
+			u_used = true;
+			
+			break;
 		case 'v':
+
+			v_used = true;
 			
 			break;
 		}
 	}
-	*/
+
+	if(a_used || c_used || E_used || e_used || g_used || h_used || l_used || o_used || p_used || r_used || s_used) {
+		return EXIT_SUCCESS;
+	}
 	
-	/*
+	if(v_used) {
+		std::cout << "xxd   open7software.se" << std::endl;
+		return EXIT_SUCCESS;
+	}
+
+	if(u_used) {
+		hex_characters = g_upper_hex_characters;
+	} else {
+		hex_characters = g_lower_hex_characters;
+	}
+	
+	std::ifstream file_stream(argv[1], std::ios::binary);
+	while(!file_stream.eof() && !file_stream.fail()) {
+		line_buffer_out(std::cout, file_stream, 4096, 8, 2);
+	}
+	
 	int index = 0;
-	for (index = optind ; index < argc ; index++) {
+	for (index = optind ; index < 2 ; index++) {
 		
 	}
-	*/
+	
 	return 0;
 }
