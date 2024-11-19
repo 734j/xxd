@@ -214,16 +214,51 @@ int main (int argc, char **argv) {
 	} else {
 		hex_characters = g_lower_hex_characters;
 	}
+
 	
-	std::ifstream file_stream(argv[1], std::ios::binary);
-	while(!file_stream.eof() && !file_stream.fail()) {
-		line_buffer_out(std::cout, file_stream, 4096, 8, 2);
-	}
 	
+	
+	int count = 0;
 	int index = 0;
-	for (index = optind ; index < 2 ; index++) {
-		
+	for(index = optind ; index < argc ; ++index, ++count) {} // get number of files given
+	if(count > 2) {
+		std::cout << "count > 2" << std::endl;
+		return -1;
 	}
+
+	if(count == 1) {
+		for (index = optind ; index < argc ; ++index) {		
+			std::ifstream file_stream(argv[index], std::ios::binary);
+			while(!file_stream.eof() && !file_stream.fail()) {
+				
+				line_buffer_out(std::cout, file_stream, 4096, 8, 2);
+			}
+		}
+	}
+
+	if(count == 2) {
+
+		int in = 0;
+		int out = 0;
+		int ccount = 1;
+		for (index = optind ; index < argc ; ++index, ++ccount) {
+			switch(ccount) {
+			case 1:
+				in = index;
+				break;
+			case 2:
+				out = index;
+				break;
+			}
+		}
+
+		std::ifstream file_stream(argv[in], std::ios::binary);
+		std::ofstream ofile(argv[out]);
+			while(!file_stream.eof() && !file_stream.fail()) {				
+				line_buffer_out(ofile, file_stream, 4096, 8, 2);
+			}
+	}
+
 	
 	return 0;
 }
