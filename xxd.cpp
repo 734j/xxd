@@ -231,7 +231,7 @@ int main (int argc, char **argv) {
 	int groupsize = DEFAULT_GROUP_SIZE;
 	int columns = DEFAULT_COLUMN_SIZE;	
 	if(v_used) {
-		std::cout << "xxd   open7software.se" << std::endl;
+		std::cout << "xxd   2024   open7software.se" << std::endl;
 		return EXIT_SUCCESS;
 	}
 
@@ -275,7 +275,7 @@ int main (int argc, char **argv) {
 			std::ifstream file_stream(argv[index], std::ios::binary);
 			while(!file_stream.eof() && !file_stream.fail()) {
 				
-				line_buffer_out(std::cout, file_stream, 4096, columns, groupsize);
+				line_buffer_out(std::cout, file_stream, BUF_SIZE_8KIB, columns, groupsize);
 			}
 		}
 	}
@@ -299,7 +299,7 @@ int main (int argc, char **argv) {
 		std::ifstream file_stream(argv[in], std::ios::binary);
 		std::ofstream ofile(argv[out]);
 			while(!file_stream.eof() && !file_stream.fail()) {				
-				line_buffer_out(ofile, file_stream, 4096, 8, 2);
+				line_buffer_out(ofile, file_stream, BUF_SIZE_8KIB, columns, groupsize);
 			}
 	}
 
