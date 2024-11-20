@@ -76,7 +76,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size
 		}
 
 		std::vector<hex_octet> line_data;
-		for(int i = 0 ; i != cols*grpsize ; ++i, ++it) {
+		for(int i = 0 ; i != cols ; ++i, ++it) {
 			if(it != big_hex_buffer.cend()) {
 				line_data.push_back(*it);
 			} else if (it == big_hex_buffer.cend() && !bytestream.eof()) {
@@ -109,6 +109,25 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size
 	return out;
 }
 
+int argument_validation(std::string argument) {
+
+	std::stringstream ss(argument);	
+	int64_t number = 0;
+	auto iter = argument.cbegin();
+	if(iter != argument.cend()) {
+		if(*iter == '0') {		   
+			return -1;
+		}
+	}
+	
+	ss >> number;	
+	if(ss.eof()) {		
+		return number;
+	}
+
+	return -1;
+}
+
 int main (int argc, char **argv) {
 	
 	g_argv = argv[0];
@@ -130,7 +149,9 @@ int main (int argc, char **argv) {
 	bool u_used = false;
 	bool v_used = false;
 	int opt = 0;
-	while((opt = getopt(argc, argv, "acEeg:hl:o:prs:uv")) != -1) {
+	std::string c_arg;
+	std::string g_arg;
+	while((opt = getopt(argc, argv, "ac:Eeg:hl:o:prs:uv")) != -1) {
 		switch(opt) {
 		case 'a':
 
@@ -140,6 +161,7 @@ int main (int argc, char **argv) {
 		case 'c':
 
 			c_used = true;
+			c_arg = optarg;
 			
 			break;
 		case 'E':
@@ -155,6 +177,7 @@ int main (int argc, char **argv) {
 		case 'g':
 
 			g_used = true;
+			g_arg = optarg;
 			
 			break;
 		case 'h':
@@ -200,23 +223,43 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	if(a_used || c_used || E_used || e_used || g_used || h_used || l_used || o_used || p_used || r_used || s_used) {
+	if(a_used || E_used || e_used || l_used || o_used || p_used || r_used || s_used) {
 		return EXIT_SUCCESS;
 	}
-	
+
+	int groupsize = DEFAULT_GROUP_SIZE;
+	int columns = DEFAULT_COLUMN_SIZE;	
 	if(v_used) {
 		std::cout << "xxd   open7software.se" << std::endl;
 		return EXIT_SUCCESS;
 	}
 
+	if(h_used) {
+		std::cout << "A VERY USEFUL HELP MESSAGE" << std::endl;
+		return EXIT_SUCCESS;
+	}
+	
 	if(u_used) {
 		hex_characters = g_upper_hex_characters;
 	} else {
 		hex_characters = g_lower_hex_characters;
 	}
 
+	if(c_used) {
+		int av = argument_validation(c_arg);		
+		if(av > 256 || av < 1) {
+			std::cout << g_argv << ": invalid number of columns (max. 256). " << std::endl;
+			return EXIT_FAILURE;
+		}
+
+		columns = av;
+	}
 	
-	
+	if(g_used) {
+		int av = argument_validation(g_arg);		
+		std::cout << "g_arg av: " << av << std::endl;
+		groupsize = av;
+	}
 	
 	int count = 0;
 	int index = 0;
@@ -231,7 +274,7 @@ int main (int argc, char **argv) {
 			std::ifstream file_stream(argv[index], std::ios::binary);
 			while(!file_stream.eof() && !file_stream.fail()) {
 				
-				line_buffer_out(std::cout, file_stream, 4096, 8, 2);
+				line_buffer_out(std::cout, file_stream, 4096, columns, groupsize);
 			}
 		}
 	}
