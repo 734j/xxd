@@ -1,8 +1,7 @@
-#!/usr/bin/python
-with open('output-test', 'r') as infile:
-    # Open the output file for writing
-    with open('output_test_off_only', 'w') as outfile:
-        # Process each line in the input file
+#!/usr/bin/python3
+with open('output-TESTING', 'r') as infile:
+    with open('output_TESTING_off_only', 'w') as outfile:
         for line in infile:
-            # Write the first 9 characters of each line to the output file
+            print(f"Original line: {repr(line)}")  # Debug: Show full line including invisible characters
+            print(f"Sliced part: {repr(line[:9])}")  # Debug: Show the sliced part
             outfile.write(line[:9] + '\n')

@@ -22,7 +22,7 @@ const char *hex_characters = nullptr;
 const char *g_lower_hex_characters = "0123456789abcdef";
 const char *g_upper_hex_characters = "0123456789ABCDEF";
 
-hex_octet byte2hex(char byte) {
+inline hex_octet byte2hex(char byte) {
 
 	return hex_octet(hex_characters[(byte >> 4) & 0x0F],
 					 hex_characters[byte & 0x0F]); 
@@ -30,7 +30,7 @@ hex_octet byte2hex(char byte) {
 
 std::string offsetformat(long offset) {
 
-	std::string off_string(9, '\0');
+	std::string off_string(8, '\0');
 	long rem = 0;
 	for(int i = 7 ; i >= 0 ; --i) {
 		rem = offset % 16;
@@ -76,9 +76,9 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size
 		}
 
 		std::vector<hex_octet> line_data;
-		for(int i = 0 ; i != cols ; ++i, ++it) {
+		for(int i = 0 ; i != cols ; ++i, ++it) {			
 			if(it != big_hex_buffer.cend()) {
-				line_data.push_back(*it);
+				line_data.push_back(*it);				
 			} else if (it == big_hex_buffer.cend() && !bytestream.eof()) {
 				big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
 				it = big_hex_buffer.cbegin();
@@ -93,8 +93,8 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size
 			for(int j = 0 ; j < grpsize ; ++j) {
 				if(itld != line_data.cend()) {					 
 					out << itld->get_data();
-					++offset;
 					++itld;
+					++offset;
 				}
 			}
 
