@@ -22,7 +22,7 @@ const char *hex_characters = nullptr;
 const char *g_lower_hex_characters = "0123456789abcdef";
 const char *g_upper_hex_characters = "0123456789ABCDEF";
 
-inline hex_octet byte2hex(char byte) {
+inline hex_octet byte2hex(const char byte) {
 
 	return hex_octet(hex_characters[(byte >> 4) & 0x0F],
 					 hex_characters[byte & 0x0F]); 
@@ -41,7 +41,7 @@ std::string offsetformat(long offset) {
 	return off_string;
 }
 
-std::vector<hex_octet> byte_buffer_2_hex(std::ifstream &bytestream, size_t bufsize) {
+std::vector<hex_octet> byte_buffer_2_hex(std::ifstream &bytestream, const size_t bufsize) {
 
 	std::vector<char> bufbytes(bufsize);
 	std::vector<hex_octet> ho;
@@ -58,7 +58,7 @@ std::vector<hex_octet> byte_buffer_2_hex(std::ifstream &bytestream, size_t bufsi
 	return ho;
 }
 
-std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size_t bufsize, int cols, int grpsize) {
+std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, const size_t bufsize, const int cols, const int grpsize) {
 
 	if(cols > 256 || cols < 1) {
 		bytestream.setstate(std::ios::failbit);
@@ -97,7 +97,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size
 					++offset;
 				}
 			}
-
+			
 			out << " ";
 		}
 
@@ -110,7 +110,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, size
 	return out;
 }
 
-int argument_validation(std::string argument) {
+int argument_validation(const std::string argument) {
 
 	std::stringstream ss(argument);	
 	int64_t number = 0;
