@@ -271,7 +271,7 @@ int main (int argc, char **argv) {
 		
 		groupsize = av;
 	}
-	
+
 	int count = 0;
 	int index = 0;
 	for(index = optind ; index < argc ; ++index, ++count) {} // get number of files given
@@ -279,7 +279,7 @@ int main (int argc, char **argv) {
 		std::cout << "count > 2" << std::endl;
 		return -1;
 	}
-
+	
 	if(count == 1) {
 		for (index = optind ; index < argc ; ++index) {		
 			std::ifstream file_stream(argv[index], std::ios::binary);
@@ -312,7 +312,6 @@ int main (int argc, char **argv) {
 				line_buffer_out(ofile, file_stream, BUF_SIZE_8KIB, columns, groupsize);
 			}
 	}
-
 	
 	return 0;
 }
