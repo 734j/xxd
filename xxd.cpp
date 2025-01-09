@@ -30,22 +30,6 @@ inline hex_octet byte2hex(const char byte) {
 					 hex_characters[byte & 0x0F]); 
 }
 
-std::string readable_time_YYYYMMDD() {
-
-	struct tm *tmp = NULL;
-	char *pretty_time = (char*)malloc(sizeof(char) * 512);
-	const time_t epochtime = std::time(NULL);
-	tmp = localtime(&epochtime);
-	if(strftime(pretty_time, 512, "%F", tmp) == 0) {
-		free(pretty_time);
-		return NULL;
-	}
-
-	std::string stime = pretty_time;
-	free(pretty_time);
-	return stime;
-}
-
 std::string offsetformat(long offset) {
 
 	std::string off_string(8, '\0');
@@ -76,11 +60,20 @@ std::vector<hex_octet> byte_buffer_2_hex(std::ifstream &bytestream, const size_t
 	return ho;
 }
 
-std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, const size_t bufsize, const int cols, const int grpsize) {
+std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, const size_t bufsize, const int columns, const int grpsize) {
 
-	if(cols > 256 || cols < 1) {
-		bytestream.setstate(std::ios::failbit);
-		return out;
+	int grpsz = grpsize;
+	int cols = columns;
+	const char *spacer = " ";
+	const char *nospacer = "";
+	const char *ptr_spacer = spacer;
+	if(grpsize == 0) {
+		ptr_spacer = nospacer;
+		grpsz = DEFAULT_GROUP_SIZE;
+	}		
+
+	if(cols == 0) {
+		cols = DEFAULT_COLUMN_SIZE;
 	}
 	
 	long offset = 0;
@@ -109,7 +102,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, cons
 		auto itld = line_data.cbegin();
 		out << offsetformat(offset) << ": ";
 		for(int i = 0 ; i < cols ; ++i) {
-			for(int j = 0 ; j < grpsize ; ++j) {
+			for(int j = 0 ; j < grpsz ; ++j) {
 				if(itld != line_data.cend()) {					 
 					out << itld->get_data();
 					++itld;
@@ -117,7 +110,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, cons
 				}
 			}
 			
-			out << " ";
+			out << ptr_spacer;
 		}
 
 		out << "\n";
@@ -129,16 +122,10 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, cons
 	return out;
 }
 
-int argument_validation(const std::string argument) {
+int argument_validation_g(const std::string argument) {
 
 	std::stringstream ss(argument);	
 	int64_t number = 0;
-	auto iter = argument.cbegin();
-	if(iter != argument.cend()) {
-		if(*iter == '0') {		   
-			return -1;
-		}
-	}
 	
 	ss >> number;	
 	if(ss.eof()) {		
@@ -266,8 +253,8 @@ int main (int argc, char **argv) {
 	}
 
 	if(c_used) {
-		int av = argument_validation(c_arg);		
-		if(av > 256 || av < 1) {
+		int av = argument_validation_g(c_arg);		
+		if(av > 256 || av < 0) {
 			std::cout << g_argv << ": invalid number of columns (max. 256). " << std::endl;
 			return EXIT_FAILURE;
 		}
@@ -276,8 +263,12 @@ int main (int argc, char **argv) {
 	}
 	
 	if(g_used) {
-		int av = argument_validation(g_arg);		
-		std::cout << "g_arg av: " << av << std::endl;
+		int av = argument_validation_g(g_arg);
+		if(av < 0) {
+			std::cout << g_argv << ": invalid group size. " << std::endl;
+			return EXIT_FAILURE;
+		}
+		
 		groupsize = av;
 	}
 	
