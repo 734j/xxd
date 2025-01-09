@@ -100,6 +100,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, cons
 			} else if (it == big_hex_buffer.cend() && !bytestream.eof()) {
 				big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
 				it = big_hex_buffer.cbegin();
+				line_data.push_back(*it);
 			} else if (it == big_hex_buffer.cend() && bytestream.eof()) {
 				break;
 			}
