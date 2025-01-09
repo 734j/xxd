@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <unistd.h>
 #include <cstdio>
+#include <ctime>
 #include <cstdlib>
 #include <cstring>
 #include <iomanip>
@@ -18,6 +19,7 @@
  */
 
 char *g_argv = nullptr;
+const char *link_web = "open7software.se";
 const char *hex_characters = nullptr;
 const char *g_lower_hex_characters = "0123456789abcdef";
 const char *g_upper_hex_characters = "0123456789ABCDEF";
@@ -26,6 +28,22 @@ inline hex_octet byte2hex(const char byte) {
 
 	return hex_octet(hex_characters[(byte >> 4) & 0x0F],
 					 hex_characters[byte & 0x0F]); 
+}
+
+std::string readable_time_YYYYMMDD() {
+
+	struct tm *tmp = NULL;
+	char *pretty_time = (char*)malloc(sizeof(char) * 512);
+	const time_t epochtime = std::time(NULL);
+	tmp = localtime(&epochtime);
+	if(strftime(pretty_time, 512, "%F", tmp) == 0) {
+		free(pretty_time);
+		return NULL;
+	}
+
+	std::string stime = pretty_time;
+	free(pretty_time);
+	return stime;
 }
 
 std::string offsetformat(long offset) {
@@ -52,7 +70,7 @@ std::vector<hex_octet> byte_buffer_2_hex(std::ifstream &bytestream, const size_t
 	}
 	
 	for(auto &a : bufbytes) {
-		ho.push_back(hex_octet(byte2hex(a)));
+		ho.push_back(byte2hex(a));
 	}
 	
 	return ho;
@@ -231,7 +249,7 @@ int main (int argc, char **argv) {
 	int groupsize = DEFAULT_GROUP_SIZE;
 	int columns = DEFAULT_COLUMN_SIZE;	
 	if(v_used) {
-		std::cout << "xxd   2024   open7software.se" << std::endl;
+		std::cout << g_argv << "   " << "2025" << "   " << link_web << "   " << std::endl;
 		return EXIT_SUCCESS;
 	}
 

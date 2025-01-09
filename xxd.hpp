@@ -5,6 +5,12 @@
 #define DEFAULT_GROUP_SIZE 2
 #define DEFAULT_COLUMN_SIZE 16
 
+#ifdef DEBUG_S // Stream for debugging, pass -DDEBUG_S and then compile to turn on
+#define DEBUG_STREAM(x) std::cerr x
+#else
+#define DEBUG_STREAM(x)
+#endif
+
 #ifndef XXD_HPP
 #define XXD_HPP
 #include <string>
