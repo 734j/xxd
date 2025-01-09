@@ -17,7 +17,7 @@ def get_byte_at_offset(file_path, offset):
 
 # Example usage
 file_path = 'xxd-TESTING'
-offset = 0x190320
+offset = 0x00193719
 result = get_byte_at_offset(file_path, offset)
 
 if result:
