@@ -43,7 +43,7 @@ std::string offsetformat(long offset) {
 	return off_string;
 }
 
-std::vector<hex_octet> byte_buffer_2_hex(std::ifstream &bytestream, const size_t bufsize) {
+std::vector<hex_octet> byte_buffer_2_hex(std::istream &bytestream, const size_t bufsize) {
 
 	std::vector<char> bufbytes(bufsize);
 	std::vector<hex_octet> ho;
@@ -60,7 +60,7 @@ std::vector<hex_octet> byte_buffer_2_hex(std::ifstream &bytestream, const size_t
 	return ho;
 }
 
-std::ostream &line_buffer_out(std::ostream &out, std::ifstream &bytestream, const size_t bufsize, const int columns, const int grpsize) {
+std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns, const int grpsize) {
 
 	int grpsz = grpsize;
 	int cols = columns;
@@ -138,9 +138,9 @@ int argument_validation_g(const std::string argument) {
 int main (int argc, char **argv) {
 	
 	g_argv = argv[0];
-	if (argc == 1) {
+	/*if (argc == 1) {
         return EXIT_FAILURE;
-    }	
+		}*/	
 
 	bool a_used = false;
 	bool c_used = false;
@@ -279,19 +279,24 @@ int main (int argc, char **argv) {
 		std::cout << "count > 2" << std::endl;
 		return -1;
 	}
-	
+
+	std::istream *is_in = &std::cin;
+	std::ostream *os_out = &std::cout;
+	std::ifstream in_file;
+	std::ofstream out_file;
 	if(count == 1) {
-		for (index = optind ; index < argc ; ++index) {		
-			std::ifstream file_stream(argv[index], std::ios::binary);
-			while(!file_stream.eof() && !file_stream.fail()) {
-				
-				line_buffer_out(std::cout, file_stream, BUF_SIZE_8KIB, columns, groupsize);
+		for (index = optind ; index < argc ; ++index) {
+			in_file.open(argv[index], std::ios::binary);
+			if(!in_file.is_open()) {
+				DEBUG_STREAM( << "in_file.is_open(): " << in_file.is_open() << std::endl);
+				return EXIT_FAILURE;
 			}
+			
+			is_in = &in_file;
 		}
 	}
 
 	if(count == 2) {
-
 		int in = 0;
 		int out = 0;
 		int ccount = 1;
@@ -306,12 +311,24 @@ int main (int argc, char **argv) {
 			}
 		}
 
-		std::ifstream file_stream(argv[in], std::ios::binary);
-		std::ofstream ofile(argv[out]);
-			while(!file_stream.eof() && !file_stream.fail()) {				
-				line_buffer_out(ofile, file_stream, BUF_SIZE_8KIB, columns, groupsize);
-			}
+		in_file.open(argv[in], std::ios::binary);
+		out_file.open(argv[out]);
+		if(!in_file.is_open() || !out_file.is_open()) {
+			DEBUG_STREAM( << "in_file.is_open(): " << in_file.is_open() << "\nout_file.is_open(): " << out_file.is_open() << std::endl);
+			in_file.close();
+			out_file.close();
+			return EXIT_FAILURE;
+		}
+		
+		is_in = &in_file;
+		os_out = &out_file;
 	}
-	
+
+	while(!is_in->eof() && !is_in->fail()) {
+		line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize);
+		in_file.close();
+		out_file.close();
+	}
+		
 	return 0;
 }
