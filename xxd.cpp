@@ -61,7 +61,7 @@ std::vector<hex_octet> byte_buffer_2_hex(std::istream &bytestream, const size_t 
 }
 
 std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns, const int grpsize) {
-
+	
 	int grpsz = grpsize;
 	int cols = columns;
 	const char *spacer = " ";
@@ -86,6 +86,10 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 			it = big_hex_buffer.cbegin();
 		}
 
+		if(bytestream.gcount() < 1) {
+			break;
+		}
+		
 		std::vector<hex_octet> line_data;
 		for(int i = 0 ; i != cols ; ++i, ++it) {			
 			if(it != big_hex_buffer.cend()) {
@@ -138,10 +142,6 @@ int argument_validation_g(const std::string argument) {
 int main (int argc, char **argv) {
 	
 	g_argv = argv[0];
-	/*if (argc == 1) {
-        return EXIT_FAILURE;
-		}*/	
-
 	bool a_used = false;
 	bool c_used = false;
 	bool E_used = false;
@@ -274,7 +274,7 @@ int main (int argc, char **argv) {
 
 	int count = 0;
 	int index = 0;
-	for(index = optind ; index < argc ; ++index, ++count) {} // get number of files given
+	for(index = optind ; index < argc ; ++index, ++count) {}
 	if(count > 2) {
 		std::cout << "count > 2" << std::endl;
 		return -1;
@@ -329,6 +329,6 @@ int main (int argc, char **argv) {
 		in_file.close();
 		out_file.close();
 	}
-		
+
 	return 0;
 }
