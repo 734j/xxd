@@ -21,9 +21,9 @@
 
 char *g_argv = nullptr;
 const char *link_web = "open7software.se";
-const char *hex_characters = nullptr;
 const char *g_lower_hex_characters = "0123456789abcdef";
 const char *g_upper_hex_characters = "0123456789ABCDEF";
+const char *hex_characters = g_lower_hex_characters;
 
 inline hex_octet byte2hex(const char byte) {
 
@@ -259,8 +259,6 @@ int main (int argc, char **argv) {
 	
 	if(u_used) {
 		hex_characters = g_upper_hex_characters;
-	} else {
-		hex_characters = g_lower_hex_characters;
 	}
 
 	if(c_used) {
