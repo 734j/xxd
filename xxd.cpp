@@ -43,11 +43,8 @@ std::string offsetformat(uint64_t offset) {
 		
 	uint64_t rem = 0;
 	for( ; i >= 0 ; --i) {
-		//std::cout << "i: " << i << std::endl;		
 		rem = offset % 16;
 		offset = offset / 16;
-		//std::cout << "rem " << rem << std::endl;
-		//std::cout << "hex_characters[rem]: " << hex_characters[rem] << std::endl;		
 		off_string[i] = hex_characters[rem];
 	}
 
@@ -137,7 +134,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 	return out;
 }
 
-int argument_validation_g(const std::string argument) {
+uint64_t argument_validation_g(const std::string argument) {
 
 	std::stringstream ss(argument);	
 	uint64_t number = 0;
@@ -147,7 +144,7 @@ int argument_validation_g(const std::string argument) {
 		return number;
 	}
 
-	return -1;
+	return 0;
 }
 
 int main (int argc, char **argv) {
