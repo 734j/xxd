@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iomanip>
+#include <limits>
 #include "xxd.hpp"
 
 /*
@@ -30,11 +31,18 @@ inline hex_octet byte2hex(const char byte) {
 					 hex_characters[byte & 0x0F]); 
 }
 
-std::string offsetformat(long offset) {
+std::string offsetformat(uint64_t offset) {
 
-	std::string off_string(8, '\0');
-	long rem = 0;
-	for(int i = 7 ; i >= 0 ; --i) {
+	std::string off_string;
+	int i = 7;
+	off_string = std::string(8, '\0');
+	if(offset > std::numeric_limits<uint32_t>::max()) {
+		off_string = std::string(16, '\0');
+		i = 15;
+	}
+		
+	uint64_t rem = 0;
+	for( ; i >= 0 ; --i) {
 		rem = offset % 16;
 		offset = offset / 16;
 		off_string[i] = hex_characters[rem];
@@ -60,7 +68,7 @@ std::vector<hex_octet> byte_buffer_2_hex(std::istream &bytestream, const size_t 
 	return ho;
 }
 
-std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns, const int grpsize) {
+std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns, const int grpsize, const uint64_t off_start) {
 	
 	int grpsz = grpsize;
 	int cols = columns;
@@ -76,7 +84,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 		cols = DEFAULT_COLUMN_SIZE;
 	}
 	
-	long offset = 0;
+	uint64_t offset = off_start;
 	std::vector<hex_octet> big_hex_buffer;
 	big_hex_buffer.reserve(bufsize * 2);
 	auto it = big_hex_buffer.cbegin();
@@ -129,7 +137,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 int argument_validation_g(const std::string argument) {
 
 	std::stringstream ss(argument);	
-	int64_t number = 0;
+	uint64_t number = 0;
 	
 	ss >> number;	
 	if(ss.eof()) {		
@@ -158,6 +166,7 @@ int main (int argc, char **argv) {
 	int opt = 0;
 	std::string c_arg;
 	std::string g_arg;
+	std::string o_arg;
 	while((opt = getopt(argc, argv, "ac:Eeg:hl:o:prs:uv")) != -1) {
 		switch(opt) {
 		case 'a':
@@ -200,6 +209,7 @@ int main (int argc, char **argv) {
 		case 'o':
 
 			o_used = true;
+			o_arg = optarg;
 			
 			break;
 		case 'p':
@@ -230,12 +240,13 @@ int main (int argc, char **argv) {
 		}
 	}
 
-	if(a_used || E_used || e_used || l_used || o_used || p_used || r_used || s_used) {
+	if(a_used || E_used || e_used || l_used || p_used || r_used || s_used) {
 		return EXIT_SUCCESS;
 	}
 
 	int groupsize = DEFAULT_GROUP_SIZE;
-	int columns = DEFAULT_COLUMN_SIZE;	
+	int columns = DEFAULT_COLUMN_SIZE;
+	uint64_t off_start = 0;
 	if(v_used) {
 		std::cout << g_argv << "   " << "2025" << "   " << link_web << "   " << std::endl;
 		return EXIT_SUCCESS;
@@ -272,6 +283,10 @@ int main (int argc, char **argv) {
 		groupsize = av;
 	}
 
+	if(o_used) {
+		off_start = argument_validation_g(o_arg);
+	}
+	
 	int count = 0;
 	int index = 0;
 	for(index = optind ; index < argc ; ++index, ++count) {}
@@ -325,7 +340,7 @@ int main (int argc, char **argv) {
 	}
 
 	while(!is_in->eof() && !is_in->fail()) {
-		line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize);
+		line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize, off_start);
 		in_file.close();
 		out_file.close();
 	}
