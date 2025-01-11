@@ -43,8 +43,11 @@ std::string offsetformat(uint64_t offset) {
 		
 	uint64_t rem = 0;
 	for( ; i >= 0 ; --i) {
+		//std::cout << "i: " << i << std::endl;		
 		rem = offset % 16;
 		offset = offset / 16;
+		//std::cout << "rem " << rem << std::endl;
+		//std::cout << "hex_characters[rem]: " << hex_characters[rem] << std::endl;		
 		off_string[i] = hex_characters[rem];
 	}
 
