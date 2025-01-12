@@ -324,11 +324,21 @@ int main (int argc, char **argv) {
 			}
 		}
 
+		if(!std::filesystem::exists(argv[in])) {
+			std::cerr << "Input file does not exist" << std::endl;
+			return EXIT_FAILURE;
+		}
+		
 		in_file.open(argv[in], std::ios::binary);
+		if(!in_file.is_open() || !out_file.is_open()) {
+			std::cerr << "in_file.is_open(): " << in_file.is_open() << std::endl;
+			in_file.close();
+			return EXIT_FAILURE;
+		}
+		
 		out_file.open(argv[out]);
 		if(!in_file.is_open() || !out_file.is_open()) {
-			DEBUG_STREAM( << "in_file.is_open(): " << in_file.is_open() << "\nout_file.is_open(): " << out_file.is_open() << std::endl);
-			in_file.close();
+			std::cerr << "out_file.is_open(): " << out_file.is_open() << std::endl;
 			out_file.close();
 			return EXIT_FAILURE;
 		}
