@@ -1,0 +1,20 @@
+1. Input file does not exist:
+xxd nonexistent.txt
+Result: No such file or directory X
+
+2. Input file exists, but no permission to open:
+xxd nopermission.txt
+Result: Permission denied X
+
+3. Input file exists with no permission to open OR input file does not exist:
+xxd nonexistent_or_nopermission.txt newfile.txt
+Result: No permission error, regardless if output file exists. Don't even try to open output file. X
+
+4. Input file exists, with permission to open. Output file exists, but no permission to open for writing.
+xxd permitted.txt nopermission.txt
+Result: No permission error
+
+5. Input file exists, with permission to open. Output file does not exist, but no permission to create files.
+xxd permitted.txt newfile_nopermission.txt
+Result: No permission error
+

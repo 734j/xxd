@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <unistd.h>
 #include <cstdio>
+#include <cerrno>
 #include <ctime>
 #include <cstdlib>
 #include <cstring>
@@ -66,6 +67,57 @@ std::vector<hex_octet> byte_buffer_2_hex(std::istream &bytestream, const size_t 
 	}
 	
 	return ho;
+}
+
+std::ostream &postscript_line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns) {
+	
+	int cols = columns;
+	if(cols == 0) {
+		cols = DEFAULT_COLUMN_SIZE;
+	}
+	
+	std::vector<hex_octet> big_hex_buffer;
+	big_hex_buffer.reserve(bufsize * 2);
+	auto it = big_hex_buffer.cbegin();
+	while(true) {
+		if(it == big_hex_buffer.cend() && !bytestream.eof()) {
+			big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
+			it = big_hex_buffer.cbegin();
+		}
+
+		if(bytestream.gcount() < 1) {
+			break;
+		}
+		
+		std::vector<hex_octet> line_data;
+		for(int i = 0 ; i != cols ; ++i, ++it) {			
+			if(it != big_hex_buffer.cend()) {
+				line_data.push_back(*it);				
+			} else if (it == big_hex_buffer.cend() && !bytestream.eof()) {
+				big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
+				it = big_hex_buffer.cbegin();
+				line_data.push_back(*it);
+			} else if (it == big_hex_buffer.cend() && bytestream.eof()) {
+				break;
+			}
+		}
+
+		auto itld = line_data.cbegin();
+		for(int i = 0 ; i < cols ; ++i) {
+				if(itld != line_data.cend()) {					 
+					out << itld->get_data();
+					++itld;
+				}
+			
+		}
+
+		out << "\n";
+		if(bytestream.eof() && (it == big_hex_buffer.cend())) {
+			break;
+		}
+	}
+	
+	return out;
 }
 
 std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns, const int grpsize, const uint64_t off_start) {
@@ -150,6 +202,10 @@ uint64_t argument_validation_g(const std::string argument) {
 int main (int argc, char **argv) {
 	
 	g_argv = argv[0];
+	int opt = 0;
+	std::string c_arg;
+	std::string g_arg;
+	std::string o_arg;
 	bool a_used = false;
 	bool c_used = false;
 	bool E_used = false;
@@ -163,10 +219,6 @@ int main (int argc, char **argv) {
 	bool s_used = false;
 	bool u_used = false;
 	bool v_used = false;
-	int opt = 0;
-	std::string c_arg;
-	std::string g_arg;
-	std::string o_arg;
 	while((opt = getopt(argc, argv, "ac:Eeg:hl:o:prs:uv")) != -1) {
 		switch(opt) {
 		case 'a':
@@ -301,7 +353,7 @@ int main (int argc, char **argv) {
 		for (index = optind ; index < argc ; ++index) {
 			in_file.open(argv[index], std::ios::binary);
 			if(!in_file.is_open()) {
-				DEBUG_STREAM( << "in_file.is_open(): " << in_file.is_open() << std::endl);
+				std::perror(g_argv);
 				return EXIT_FAILURE;
 			}
 			
@@ -323,23 +375,17 @@ int main (int argc, char **argv) {
 				break;
 			}
 		}
-
-		if(!std::filesystem::exists(argv[in])) {
-			std::cerr << "Input file does not exist" << std::endl;
-			return EXIT_FAILURE;
-		}
 		
 		in_file.open(argv[in], std::ios::binary);
-		if(!in_file.is_open() || !out_file.is_open()) {
-			std::cerr << "in_file.is_open(): " << in_file.is_open() << std::endl;
-			in_file.close();
+		if(!in_file.is_open()) {
+			std::perror(g_argv);
 			return EXIT_FAILURE;
 		}
 		
 		out_file.open(argv[out]);
-		if(!in_file.is_open() || !out_file.is_open()) {
-			std::cerr << "out_file.is_open(): " << out_file.is_open() << std::endl;
-			out_file.close();
+		if(!out_file.is_open()) {
+			std::perror(g_argv);
+			in_file.close();
 			return EXIT_FAILURE;
 		}
 		
