@@ -4,6 +4,7 @@
 #define BUF_SIZE_1MIB 1048576
 #define DEFAULT_GROUP_SIZE 2
 #define DEFAULT_COLUMN_SIZE 16
+#define DEFAULT_POSTSCRIPT_COLUMN_SIZE 30
 
 #ifdef __TEST_STREAM_STDERR // Stream for debugging, pass -DDEBUG_S and then compile to turn on
 #define DEBUG_STREAM(x) std::cerr x

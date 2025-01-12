@@ -104,11 +104,10 @@ std::ostream &postscript_line_buffer_out(std::ostream &out, std::istream &bytest
 
 		auto itld = line_data.cbegin();
 		for(int i = 0 ; i < cols ; ++i) {
-				if(itld != line_data.cend()) {					 
-					out << itld->get_data();
-					++itld;
-				}
-			
+			if(itld != line_data.cend()) {					 
+				out << itld->get_data();
+				++itld;
+			}
 		}
 
 		out << "\n";
@@ -219,11 +218,17 @@ int main (int argc, char **argv) {
 	bool s_used = false;
 	bool u_used = false;
 	bool v_used = false;
+	int h_mut = 0;
+	int v_mut = 0;
+	int p_mut = 0;
+	int a_mut = 0;
+	int o_mut = 0;
 	while((opt = getopt(argc, argv, "ac:Eeg:hl:o:prs:uv")) != -1) {
 		switch(opt) {
 		case 'a':
 
 			a_used = true;
+			a_mut = 1;
 			
 			break;
 		case 'c':
@@ -251,6 +256,7 @@ int main (int argc, char **argv) {
 		case 'h':
 
 			h_used = true;
+			h_mut = 1;
 			
 			break;
 		case 'l':
@@ -262,11 +268,13 @@ int main (int argc, char **argv) {
 
 			o_used = true;
 			o_arg = optarg;
+			o_mut = 1;
 			
 			break;
 		case 'p':
 
 			p_used = true;
+			p_mut = 1;
 			
 			break;
 		case 'r':
@@ -287,12 +295,13 @@ int main (int argc, char **argv) {
 		case 'v':
 
 			v_used = true;
+			v_mut = 1;
 			
 			break;
 		}
 	}
-
-	if(a_used || E_used || e_used || l_used || p_used || r_used || s_used) {
+	
+	if(a_used || E_used || e_used || l_used || r_used || s_used) {
 		return EXIT_SUCCESS;
 	}
 
@@ -333,6 +342,10 @@ int main (int argc, char **argv) {
 		groupsize = av;
 	}
 
+	if(p_used) {
+		columns = DEFAULT_POSTSCRIPT_COLUMN_SIZE;
+	}
+	
 	if(o_used) {
 		off_start = argument_validation_g(o_arg);
 	}
@@ -394,7 +407,12 @@ int main (int argc, char **argv) {
 	}
 
 	while(!is_in->eof() && !is_in->fail()) {
-		line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize, off_start);
+		if(p_used) {
+			postscript_line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns);
+		} else {
+			line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize, off_start);
+		}
+		
 		in_file.close();
 		out_file.close();
 	}
