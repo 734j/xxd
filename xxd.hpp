@@ -6,6 +6,8 @@
 #define DEFAULT_COLUMN_SIZE 16
 #define DEFAULT_POSTSCRIPT_COLUMN_SIZE 30
 
+#define USAGE_LONG "A VERY USEFUL HELP MESSAGE"
+
 #ifdef __TEST_STREAM_STDERR // Stream for debugging, pass -DDEBUG_S and then compile to turn on
 #define DEBUG_STREAM(x) std::cerr x
 #else
@@ -15,6 +17,21 @@
 #ifndef XXD_HPP
 #define XXD_HPP
 #include <string>
+#include <vector>
+#include <unordered_set>
+
+enum xxd_option {
+    A_OPT, C_OPT, C_E_OPT, E_OPT, G_OPT, O_OPT, U_OPT, L_OPT, S_OPT,
+    P_OPT, R_OPT, H_OPT, V_OPT
+};
+
+std::vector<std::unordered_set<xxd_option>> option_groups{
+		{A_OPT, C_OPT, C_E_OPT, E_OPT, G_OPT, O_OPT, U_OPT, L_OPT, S_OPT},
+		{P_OPT, L_OPT, U_OPT, C_OPT, S_OPT},
+		{P_OPT, R_OPT},
+		{H_OPT},
+		{V_OPT}
+};
 
 class hex_octet {
 public:

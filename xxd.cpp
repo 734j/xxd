@@ -11,6 +11,7 @@
 #include <cstring>
 #include <iomanip>
 #include <limits>
+#include <unordered_set>
 #include "xxd.hpp"
 
 /*
@@ -72,8 +73,12 @@ std::vector<hex_octet> byte_buffer_2_hex(std::istream &bytestream, const size_t 
 std::ostream &postscript_line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns) {
 	
 	int cols = columns;
+	const char *newline = "\n";
+	const char *nothing = "";
+	const char *ptr_spacer = newline;
 	if(cols == 0) {
-		cols = DEFAULT_COLUMN_SIZE;
+		cols = DEFAULT_POSTSCRIPT_COLUMN_SIZE;
+		ptr_spacer = nothing;
 	}
 	
 	std::vector<hex_octet> big_hex_buffer;
@@ -110,10 +115,14 @@ std::ostream &postscript_line_buffer_out(std::ostream &out, std::istream &bytest
 			}
 		}
 
-		out << "\n";
+		out << ptr_spacer;
 		if(bytestream.eof() && (it == big_hex_buffer.cend())) {
 			break;
 		}
+	}
+
+	if(columns == 0) {
+		out << std::endl;
 	}
 	
 	return out;
@@ -198,10 +207,21 @@ uint64_t argument_validation_g(const std::string argument) {
 	return 0;
 }
 
+bool check_for_conflict(xxd_option opt1, xxd_option opt2) {
+    for (const auto &group : option_groups) {
+        if (group.count(opt1) && group.count(opt2)) {
+            return false;  // no conflict, both are in the same group
+        }
+    }
+	
+    return true;  // conflict, options are from different groups
+}
+
 int main (int argc, char **argv) {
 	
 	g_argv = argv[0];
 	int opt = 0;
+	std::unordered_set<xxd_option> used_opts;
 	std::string c_arg;
 	std::string g_arg;
 	std::string o_arg;
@@ -218,93 +238,114 @@ int main (int argc, char **argv) {
 	bool s_used = false;
 	bool u_used = false;
 	bool v_used = false;
-	int h_mut = 0;
-	int v_mut = 0;
-	int p_mut = 0;
-	int a_mut = 0;
-	int o_mut = 0;
 	while((opt = getopt(argc, argv, "ac:Eeg:hl:o:prs:uv")) != -1) {
+		xxd_option current_opt;
 		switch(opt) {
 		case 'a':
 
 			a_used = true;
-			a_mut = 1;
-			
+			current_opt = A_OPT;
+
 			break;
 		case 'c':
 
 			c_used = true;
 			c_arg = optarg;
+			current_opt = C_OPT;
 			
 			break;
 		case 'E':
 
 			E_used = true;
+			current_opt = C_E_OPT;
 			
 			break;
 		case 'e':
 
 			e_used = true;
+			current_opt = E_OPT;
 			
 			break;
 		case 'g':
 
 			g_used = true;
 			g_arg = optarg;
+			current_opt = G_OPT;
 			
 			break;
 		case 'h':
 
 			h_used = true;
-			h_mut = 1;
+			current_opt = H_OPT;
 			
 			break;
 		case 'l':
 
 			l_used = true;
+			current_opt = L_OPT;
 			
 			break;
 		case 'o':
 
 			o_used = true;
 			o_arg = optarg;
-			o_mut = 1;
+			current_opt = O_OPT;
 			
 			break;
 		case 'p':
 
 			p_used = true;
-			p_mut = 1;
+			current_opt = P_OPT;
 			
 			break;
 		case 'r':
 
 			r_used = true;
+			current_opt = R_OPT;
 			
 			break;
 		case 's':
 
 			s_used = true;
+			current_opt = S_OPT;
 			
 			break;
 		case 'u':
 
 			u_used = true;
+			current_opt = U_OPT;
 			
 			break;
 		case 'v':
 
 			v_used = true;
-			v_mut = 1;
+			current_opt = V_OPT;
+			
+			break;
+		default:
+
+			std::cerr << USAGE_LONG << std::endl;
+			return EXIT_FAILURE;
 			
 			break;
 		}
+
+		for (const auto& used_opt : used_opts) {
+            if (check_for_conflict(used_opt, current_opt)) {
+                std::cerr << USAGE_LONG << std::endl;
+                return EXIT_FAILURE;
+            }
+        }
+
+		used_opts.insert(current_opt);
+		
 	}
-	
+
+		
 	if(a_used || E_used || e_used || l_used || r_used || s_used) {
 		return EXIT_SUCCESS;
 	}
-
+	
 	int groupsize = DEFAULT_GROUP_SIZE;
 	int columns = DEFAULT_COLUMN_SIZE;
 	uint64_t off_start = 0;
@@ -314,7 +355,7 @@ int main (int argc, char **argv) {
 	}
 
 	if(h_used) {
-		std::cout << "A VERY USEFUL HELP MESSAGE" << std::endl;
+		std::cout << USAGE_LONG << std::endl;
 		return EXIT_SUCCESS;
 	}
 	
@@ -343,7 +384,9 @@ int main (int argc, char **argv) {
 	}
 
 	if(p_used) {
-		columns = DEFAULT_POSTSCRIPT_COLUMN_SIZE;
+		if(c_used) {} else {
+			columns = DEFAULT_POSTSCRIPT_COLUMN_SIZE;
+		}
 	}
 	
 	if(o_used) {
@@ -408,9 +451,9 @@ int main (int argc, char **argv) {
 
 	while(!is_in->eof() && !is_in->fail()) {
 		if(p_used) {
-			postscript_line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns);
+			postscript_line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns) << std::ends;
 		} else {
-			line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize, off_start);
+			line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize, off_start) << std::ends;
 		}
 		
 		in_file.close();
