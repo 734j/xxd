@@ -208,13 +208,14 @@ uint64_t argument_validation_g(const std::string argument) {
 }
 
 bool check_for_conflict(xxd_option opt1, xxd_option opt2) {
-    for (const auto &group : option_groups) {
+
+    for (const auto &group : g_option_groups) {
         if (group.count(opt1) && group.count(opt2)) {
-            return false;  // no conflict, both are in the same group
+            return false;
         }
     }
 	
-    return true;  // conflict, options are from different groups
+    return true;
 }
 
 int main (int argc, char **argv) {
@@ -330,15 +331,14 @@ int main (int argc, char **argv) {
 			break;
 		}
 
-		for (const auto& used_opt : used_opts) {
+		for (const auto &used_opt : used_opts) {
             if (check_for_conflict(used_opt, current_opt)) {
                 std::cerr << USAGE_LONG << std::endl;
                 return EXIT_FAILURE;
             }
         }
 
-		used_opts.insert(current_opt);
-		
+		used_opts.insert(current_opt);		
 	}
 
 		
@@ -397,8 +397,8 @@ int main (int argc, char **argv) {
 	int index = 0;
 	for(index = optind ; index < argc ; ++index, ++count) {}
 	if(count > 2) {
-		std::cout << "count > 2" << std::endl;
-		return -1;
+		std::cerr << USAGE_LONG << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	std::istream *is_in = &std::cin;

@@ -25,7 +25,7 @@ enum xxd_option {
     P_OPT, R_OPT, H_OPT, V_OPT
 };
 
-std::vector<std::unordered_set<xxd_option>> option_groups{
+const std::vector<std::unordered_set<xxd_option>> g_option_groups{
 		{A_OPT, C_OPT, C_E_OPT, E_OPT, G_OPT, O_OPT, U_OPT, L_OPT, S_OPT},
 		{P_OPT, L_OPT, U_OPT, C_OPT, S_OPT},
 		{P_OPT, R_OPT},
