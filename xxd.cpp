@@ -70,6 +70,84 @@ std::vector<hex_octet> byte_buffer_2_hex(std::istream &bytestream, const size_t 
 	return ho;
 }
 
+inline std::vector<hex_octet>::const_iterator request_hex_data(std::vector<hex_octet> &hex_buffer, std::istream &bytestream, const size_t bufsize) {
+
+	hex_buffer = byte_buffer_2_hex(bytestream, bufsize);	
+	return hex_buffer.cbegin();
+}
+
+std::ostream &postscript_line_data_out(std::ostream &out, const std::vector<hex_octet> &line_data, const int cols, const char *spacer) {
+
+	auto itld = line_data.cbegin();
+		for(int i = 0 ; i < cols ; ++i) {
+			if(itld != line_data.cend()) {					 
+				out << itld->get_data();
+				++itld;
+			}
+		}
+
+		out << spacer;
+		return out;
+}
+
+std::ostream &line_data_out(std::ostream &out, const std::vector<hex_octet> &line_data, const int cols, const int grpsz, const char *spacer, uint64_t &offset) {
+
+	auto itld = line_data.cbegin();
+		out << offsetformat(offset) << ": ";
+		for(int i = 0 ; i < cols ; ++i) {
+			for(int j = 0 ; j < grpsz ; ++j) {
+				if(itld != line_data.cend()) {					 
+					out << itld->get_data();
+					++itld;
+					++offset;
+				}
+			}
+			
+			out << spacer;
+		}
+
+		out << "\n";
+		return out;
+}
+
+std::ostream &autoskip_line_data_out(std::ostream &out, const std::vector<hex_octet> &line_data, const int cols, const int grpsz, const char *spacer, uint64_t &offset) {
+
+	auto itld = line_data.cbegin();
+		out << offsetformat(offset) << ": ";
+		for(int i = 0 ; i < cols ; ++i) {
+			for(int j = 0 ; j < grpsz ; ++j) {
+				if(itld != line_data.cend()) {					 
+					out << itld->get_data();
+					++itld;
+					++offset;
+				}
+			}
+			
+			out << spacer;
+		}
+
+		out << "\n";
+		return out;
+}
+/*
+  0000 0000 1 Print
+  1000 0000 0 Print
+  
+  0000 0000 1 Print
+  0000 0000 2 No print
+  1000 0000 0 if count was 2 then print 0000 0000 first and current
+  
+  0000 0000 1 Print
+  0000 0000 2 No print
+  0000 0000 3 No print ( == 3 then just dont print anything until line_data_is_null == false)
+  0000 0000 4 No print
+  0000 0000 5 No print
+  ..... and so on
+  1000 0000 42 Print like normal
+  
+  Something like this maybe...
+*/
+
 std::ostream &postscript_line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns) {
 	
 	int cols = columns;
@@ -84,38 +162,24 @@ std::ostream &postscript_line_buffer_out(std::ostream &out, std::istream &bytest
 	std::vector<hex_octet> big_hex_buffer;
 	big_hex_buffer.reserve(bufsize * 2);
 	auto it = big_hex_buffer.cbegin();
-	while(true) {
-		if(it == big_hex_buffer.cend() && !bytestream.eof()) {
-			big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
-			it = big_hex_buffer.cbegin();
-		}
-
-		if(bytestream.gcount() < 1) {
-			break;
-		}
-		
+	while(true) {		
 		std::vector<hex_octet> line_data;
 		for(int i = 0 ; i != cols ; ++i, ++it) {			
 			if(it != big_hex_buffer.cend()) {
 				line_data.push_back(*it);				
 			} else if (it == big_hex_buffer.cend() && !bytestream.eof()) {
-				big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
-				it = big_hex_buffer.cbegin();
+				it = request_hex_data(big_hex_buffer, bytestream, bufsize);
+				if(bytestream.gcount() < 1) {
+					return out;
+				}
+				
 				line_data.push_back(*it);
 			} else if (it == big_hex_buffer.cend() && bytestream.eof()) {
 				break;
 			}
 		}
 
-		auto itld = line_data.cbegin();
-		for(int i = 0 ; i < cols ; ++i) {
-			if(itld != line_data.cend()) {					 
-				out << itld->get_data();
-				++itld;
-			}
-		}
-
-		out << ptr_spacer;
+		postscript_line_data_out(out, line_data, cols, ptr_spacer);
 		if(bytestream.eof() && (it == big_hex_buffer.cend())) {
 			break;
 		}
@@ -144,67 +208,28 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 		cols = DEFAULT_COLUMN_SIZE;
 	}
 
-	int null_count = 0;
 	uint64_t offset = off_start;
 	std::vector<hex_octet> big_hex_buffer;
 	big_hex_buffer.reserve(bufsize * 2);
 	auto it = big_hex_buffer.cbegin();
-	while(true) {
-		if(it == big_hex_buffer.cend() && !bytestream.eof()) {
-			big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
-			it = big_hex_buffer.cbegin();
-		}
-
-		if(bytestream.gcount() < 1) {
-			break;
-		}
-		
+	while(true) {		
 		std::vector<hex_octet> line_data;
 		for(int i = 0 ; i != cols ; ++i, ++it) {			
 			if(it != big_hex_buffer.cend()) {
 				line_data.push_back(*it);				
-			} else if (it == big_hex_buffer.cend() && !bytestream.eof()) {
-				big_hex_buffer = byte_buffer_2_hex(bytestream, bufsize);
-				it = big_hex_buffer.cbegin();
+			} else if (it == big_hex_buffer.cend() && !bytestream.eof()) {				
+				it = request_hex_data(big_hex_buffer, bytestream, bufsize);
+				if(bytestream.gcount() < 1) {
+					return out;
+				}
+				
 				line_data.push_back(*it);
 			} else if (it == big_hex_buffer.cend() && bytestream.eof()) {
 				break;
 			}
 		}
-		/*
-		  0000 0000 1 Print
-		  1000 0000 0 Print
-		  
-		  0000 0000 1 Print
-		  0000 0000 2 No print
-		  1000 0000 0 if count was 2 then print 0000 0000 first and current
-		  
-		  0000 0000 1 Print
-		  0000 0000 2 No print
-		  0000 0000 3 No print ( == 3 then just dont print anything until line_data_is_null == false)
-		  0000 0000 4 No print
-		  0000 0000 5 No print
-		  ..... and so on
-		  1000 0000 42 Print like normal
-
-		  Something like this maybe...
-		 */
 		
-		auto itld = line_data.cbegin();
-		out << offsetformat(offset) << ": ";
-		for(int i = 0 ; i < cols ; ++i) {
-			for(int j = 0 ; j < grpsz ; ++j) {
-				if(itld != line_data.cend()) {					 
-					out << itld->get_data();
-					++itld;
-					++offset;
-				}
-			}
-			
-			out << ptr_spacer;
-		}
-
-		out << "\n";
+		line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
 		if(bytestream.eof() && (it == big_hex_buffer.cend())) {
 			break;
 		}

@@ -57,12 +57,12 @@ private:
 bool hex_octet::line_data_is_null(const std::vector<hex_octet> &line_data) {
 	const hex_octet cmp = hex_octet('0','0');
 	for(const auto &a : line_data) {
-		if(a == cmp) {
-			return true;
+		if(a != cmp) {
+			return false;
 		}
 	}
 	
-	return false;
+	return true;
 }
 	
 class hexadecimal_line {
