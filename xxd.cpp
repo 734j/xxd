@@ -143,7 +143,8 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 	if(cols == 0) {
 		cols = DEFAULT_COLUMN_SIZE;
 	}
-	
+
+	int null_count = 0;
 	uint64_t offset = off_start;
 	std::vector<hex_octet> big_hex_buffer;
 	big_hex_buffer.reserve(bufsize * 2);
@@ -170,7 +171,25 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 				break;
 			}
 		}
+		/*
+		  0000 0000 1 Print
+		  1000 0000 0 Print
+		  
+		  0000 0000 1 Print
+		  0000 0000 2 No print
+		  1000 0000 0 if count was 2 then print 0000 0000 first and current
+		  
+		  0000 0000 1 Print
+		  0000 0000 2 No print
+		  0000 0000 3 No print ( == 3 then just dont print anything until line_data_is_null == false)
+		  0000 0000 4 No print
+		  0000 0000 5 No print
+		  ..... and so on
+		  1000 0000 42 Print like normal
 
+		  Something like this maybe...
+		 */
+		
 		auto itld = line_data.cbegin();
 		out << offsetformat(offset) << ": ";
 		for(int i = 0 ; i < cols ; ++i) {
@@ -207,7 +226,7 @@ uint64_t argument_validation_g(const std::string argument) {
 	return 0;
 }
 
-bool check_for_conflict(xxd_option opt1, xxd_option opt2) {
+bool check_for_conflict(const xxd_option opt1, const xxd_option opt2) {
 
     for (const auto &group : g_option_groups) {
         if (group.count(opt1) && group.count(opt2)) {

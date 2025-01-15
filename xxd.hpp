@@ -45,12 +45,26 @@ public:
 		octet[0] = a[0];
 		octet[1] = a[1];
 	}
-	
+
+	bool operator==(const hex_octet &other) const { return octet[0] == other.octet[0] && octet[1] == other.octet[1]; }
 	const hexo &get_data() const { return octet; }
+	static bool line_data_is_null(const std::vector<hex_octet> &line_data);
+	
 private:
 	hexo octet = {'\0'};
 };
 
+bool hex_octet::line_data_is_null(const std::vector<hex_octet> &line_data) {
+	const hex_octet cmp = hex_octet('0','0');
+	for(const auto &a : line_data) {
+		if(a == cmp) {
+			return true;
+		}
+	}
+	
+	return false;
+}
+	
 class hexadecimal_line {
 public:
 	hexadecimal_line() = default;
