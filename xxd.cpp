@@ -2,6 +2,7 @@
 #include <vector>
 #include <array>
 #include <fstream>
+#include <sstream>
 #include <filesystem>
 #include <unistd.h>
 #include <cstdio>
