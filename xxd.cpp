@@ -113,6 +113,54 @@ std::ostream &line_data_out(std::ostream &out, const std::vector<hex_octet> &lin
 
 std::ostream &autoskip_line_data_out(std::ostream &out, const std::vector<hex_octet> &line_data, const int cols, const int grpsz, const char *spacer, uint64_t &offset) {
 
+	static int count = 0;
+	static uint64_t save_off = 0;
+	static std::vector<hex_octet> save_null;
+	if(hex_octet::line_data_is_null(line_data)) {
+		++count;
+		if(count == 2) {			
+			save_off = offset;
+			save_null = line_data;
+
+		}
+	}
+
+	if(!hex_octet::line_data_is_null(line_data) && count == 2) {
+		auto save = save_null.cbegin();
+		out << offsetformat(save_off) << ": ";
+		for(int i = 0 ; i < cols ; ++i) {
+			for(int j = 0 ; j < grpsz ; ++j) {
+				if(save != save_null.cend()) {					 
+					out << save->get_data();
+					++save;
+				}
+			}
+			
+			out << spacer;
+		}
+
+		out << "\n";		
+		count = 0;
+		save_off = 0;
+		save_null = std::vector<hex_octet>();
+	}
+
+	if(!hex_octet::line_data_is_null(line_data) && count > 3) {
+		count = 0;
+		save_off = 0;
+		save_null = std::vector<hex_octet>();
+	}
+	
+	if(count == 3) {
+		out << "*\n";
+		return out;
+	}
+
+	if(count > 3) {
+		return out;
+	}
+	
+	
 	auto itld = line_data.cbegin();
 		out << offsetformat(offset) << ": ";
 		for(int i = 0 ; i < cols ; ++i) {
@@ -193,7 +241,7 @@ std::ostream &postscript_line_buffer_out(std::ostream &out, std::istream &bytest
 	return out;
 }
 
-std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns, const int grpsize, const uint64_t off_start) {
+std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns, const int grpsize, const uint64_t off_start, const bool autoskip) {
 	
 	int grpsz = grpsize;
 	int cols = columns;
@@ -229,8 +277,13 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 				break;
 			}
 		}
+
+		if(autoskip == true) {
+			autoskip_line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
+		} else {
+			line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
+		}
 		
-		line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
 		if(bytestream.eof() && (it == big_hex_buffer.cend())) {
 			break;
 		}
@@ -387,13 +440,14 @@ int main (int argc, char **argv) {
 	}
 
 		
-	if(a_used || E_used || e_used || l_used || r_used || s_used) {
+	if(E_used || e_used || l_used || r_used || s_used) {
 		return EXIT_SUCCESS;
 	}
 	
 	int groupsize = DEFAULT_GROUP_SIZE;
 	int columns = DEFAULT_COLUMN_SIZE;
 	uint64_t off_start = 0;
+	bool autoskip = false;
 	if(v_used) {
 		std::cout << g_argv << "   " << "2025" << "   " << link_web << "   " << std::endl;
 		return EXIT_SUCCESS;
@@ -436,6 +490,10 @@ int main (int argc, char **argv) {
 	
 	if(o_used) {
 		off_start = argument_validation_g(o_arg);
+	}
+
+	if(a_used) {
+		autoskip = true;
 	}
 	
 	int count = 0;
@@ -498,7 +556,7 @@ int main (int argc, char **argv) {
 		if(p_used) {
 			postscript_line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns) << std::ends;
 		} else {
-			line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize, off_start) << std::ends;
+			line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize, off_start, autoskip) << std::ends;
 		}
 		
 		in_file.close();
