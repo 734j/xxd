@@ -211,7 +211,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 		}
 
 		if(autoskip == true) {
-			autoskip_line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
+			//autoskip_line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
 		} else {
 			line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
 		}
