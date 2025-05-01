@@ -486,9 +486,9 @@ int main (int argc, char **argv) {
 
 	while(!is_in->eof() && !is_in->fail()) {
 		if(p_used) {
-			postscript_line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns) << std::ends;
+			postscript_line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns) << std::flush;
 		} else {
-			line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize, off_start, autoskip) << std::ends;
+			line_buffer_out(*os_out, *is_in, BUF_SIZE_8KIB, columns, groupsize, off_start, autoskip) << std::flush;
 		}
 		
 		in_file.close();
