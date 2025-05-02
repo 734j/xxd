@@ -6,7 +6,7 @@ testdir/
 line_buffer_out_testcases.txt
 output-nobufcheck
 output-regular
-opening_files_cases.txt
+opening_file_cases.txt
 nopermission.txt
 nopermission/
 ar.img
