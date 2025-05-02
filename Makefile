@@ -11,9 +11,11 @@ all: release
 clean:
 	rm -f $(TARGET)
 	rm -f test/$(TESTTARGET)
+	rm -f test/*.ByteData
 
 tests:
 	$(CC) $(CFLAGS_TESTBIN) $(SRCS) -o test/$(TESTTARGET)
+	$(CC) $(CFLAGS_TESTBIN) test/setup-autoskip-testfiles.cpp -o test/setup-autoskip-testfiles
 
 install:
 	cp $(TARGET) $(INSTALL_DIRECTORY)

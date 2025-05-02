@@ -18,3 +18,5 @@ o_xxd
 o_xxd_only_off
 t_xxd
 t_xxd_only_off
+setup-autoskip-testfiles
+*.ByteData
