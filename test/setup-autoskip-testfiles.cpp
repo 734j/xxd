@@ -75,5 +75,9 @@ int main() {
 	as12.write(Vas12.data(), Vas12.size());
 	as12.write(Vas12_2.data(), Vas12_2.size());
 	as12.write(Vas12_3.data(), Vas12_3.size());
+
+	std::ofstream as13("as-test13.ByteData", std::ios::binary);
+	std::vector<char> Vas13(64, 0x00);
+	as13.write(Vas13.data(), Vas13.size());
 	return 0;
 }
