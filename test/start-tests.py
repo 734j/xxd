@@ -39,8 +39,6 @@ def _test_diff_offsets():
         os.remove(t_off_out_name2)
         os.remove(o_off_out_name2)
         return False
-        
-    
 
 def run_tests():
     current_module = globals()

@@ -92,6 +92,7 @@ int main() {
 		as14.write(Vas14_2.data(), Vas14_2.size());
 		as14.write(Vas14_3.data(), Vas14_3.size());
 	}
+	as14.write(Vas14_2.data(), Vas14_2.size());
 	
 	return 0;
 }

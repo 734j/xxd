@@ -110,24 +110,6 @@ std::ostream &line_data_out(std::ostream &out, const std::vector<hex_octet> &lin
 	out << "\n";
 	return out;
 }
-/*
-  0000 0000 1 Print
-  1000 0000 0 Print
-  
-  0000 0000 1 Print
-  0000 0000 2 No print
-  1000 0000 0 if count was 2 then print 0000 0000 first and current
-  
-  0000 0000 1 Print
-  0000 0000 2 No print
-  0000 0000 3 No print ( == 3 then just dont print anything until line_data_is_null == false)
-  0000 0000 4 No print
-  0000 0000 5 No print
-  ..... and so on
-  1000 0000 42 Print like normal
-  
-  Something like this maybe...
-*/
 
 std::ostream &postscript_line_buffer_out(std::ostream &out, std::istream &bytestream, const size_t bufsize, const int columns) {
 	
@@ -205,6 +187,7 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 				}
 				
 				line_data.push_back(*it);
+				
 			} else if (it == big_hex_buffer.cend() && bytestream.eof()) {
 				break;
 			}
@@ -213,11 +196,16 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 		if(autoskip == true) {
 			static bool is_skipping{false};
 			if(hex_octet::line_data_is_null(line_data)) {
+				if(bytestream.eof() && it == big_hex_buffer.cend()) {
+					line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
+					break;
+				}
+				
 				if(!is_skipping) {
 					out << "*\n";
 					is_skipping = true;
 				}
-				
+
 				offset += line_data.size();
 				
 			} else if(!hex_octet::line_data_is_null(line_data)) {
