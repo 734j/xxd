@@ -80,35 +80,35 @@ inline std::vector<hex_octet>::const_iterator request_hex_data(std::vector<hex_o
 std::ostream &postscript_line_data_out(std::ostream &out, const std::vector<hex_octet> &line_data, const int cols, const char *spacer) {
 
 	auto itld = line_data.cbegin();
-		for(int i = 0 ; i < cols ; ++i) {
-			if(itld != line_data.cend()) {					 
-				out << itld->get_data();
-				++itld;
-			}
+	for(int i = 0 ; i < cols ; ++i) {
+		if(itld != line_data.cend()) {					 
+			out << itld->get_data();
+			++itld;
 		}
-
-		out << spacer;
-		return out;
+	}
+	
+	out << spacer;
+	return out;
 }
 
 std::ostream &line_data_out(std::ostream &out, const std::vector<hex_octet> &line_data, const int cols, const int grpsz, const char *spacer, uint64_t &offset) {
 
 	auto itld = line_data.cbegin();
-		out << offsetformat(offset) << ": ";
-		for(int i = 0 ; i < cols ; ++i) {
-			for(int j = 0 ; j < grpsz ; ++j) {
-				if(itld != line_data.cend()) {					 
-					out << itld->get_data();
-					++itld;
-					++offset;
-				}
+	out << offsetformat(offset) << ": ";
+	for(int i = 0 ; i < cols ; ++i) {
+		for(int j = 0 ; j < grpsz ; ++j) {
+			if(itld != line_data.cend()) {					 
+				out << itld->get_data();
+				++itld;
+				++offset;
 			}
-			
-			out << spacer;
 		}
-
-		out << "\n";
-		return out;
+		
+		out << spacer;
+	}
+	
+	out << "\n";
+	return out;
 }
 /*
   0000 0000 1 Print
@@ -211,7 +211,20 @@ std::ostream &line_buffer_out(std::ostream &out, std::istream &bytestream, const
 		}
 
 		if(autoskip == true) {
-			//autoskip_line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
+			static bool is_skipping{false};
+			if(hex_octet::line_data_is_null(line_data)) {
+				if(!is_skipping) {
+					out << "*\n";
+					is_skipping = true;
+				}
+				
+				offset += line_data.size();
+				
+			} else if(!hex_octet::line_data_is_null(line_data)) {
+				is_skipping = false;
+				line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
+			}
+		    
 		} else {
 			line_data_out(out, line_data, cols, grpsz, ptr_spacer, offset);
 		}

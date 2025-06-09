@@ -79,5 +79,19 @@ int main() {
 	std::ofstream as13("as-test13.ByteData", std::ios::binary);
 	std::vector<char> Vas13(64, 0x00);
 	as13.write(Vas13.data(), Vas13.size());
+
+	std::ofstream as14("as-test14.ByteData", std::ios::binary);
+	std::vector<char> Vas14(64, 0x31);
+	std::vector<char> Vas14_2(64, 0x00);
+	std::vector<char> Vas14_3(64, 0x31);
+	for(int i = 0 ; i < 100 ; ++i) {
+		as14.write(Vas14.data(), Vas14.size());
+		as14.write(Vas14_2.data(), Vas14_2.size());
+		as14.write(Vas14_3.data(), Vas14_3.size());
+		as14.write(Vas14.data(), Vas14.size());
+		as14.write(Vas14_2.data(), Vas14_2.size());
+		as14.write(Vas14_3.data(), Vas14_3.size());
+	}
+	
 	return 0;
 }
