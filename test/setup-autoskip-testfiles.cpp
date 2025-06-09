@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include "../xxd.hpp"
 
 int main() {
 
@@ -93,6 +94,11 @@ int main() {
 		as14.write(Vas14_3.data(), Vas14_3.size());
 	}
 	as14.write(Vas14_2.data(), Vas14_2.size());
-	
+
+	std::ofstream as_random("as-test-random.ByteData", std::ios::binary);
+	std::ifstream as_urandom_file("/dev/urandom", std::ios::binary);
+	std::vector<char> urandom_data(BUF_SIZE_8KIB);
+	as_urandom_file.read(&urandom_data[0], BUF_SIZE_8KIB);
+	as_random.write(urandom_data.data(), urandom_data.size());
 	return 0;
 }
