@@ -93,8 +93,8 @@ int main() {
 		as14.write(Vas14_2.data(), Vas14_2.size());
 		as14.write(Vas14_3.data(), Vas14_3.size());
 	}
+	
 	as14.write(Vas14_2.data(), Vas14_2.size());
-
 	std::ofstream as_random("as-test-random.ByteData", std::ios::binary);
 	std::ifstream as_urandom_file("/dev/urandom", std::ios::binary);
 	std::vector<char> urandom_data(BUF_SIZE_8KIB);
